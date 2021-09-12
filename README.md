@@ -25,7 +25,7 @@ npm run build
 ```sh
 npm start -- --o <output filename> --from <from date> --to <to date>
 ```
-Where from date and to date must be date parseable by js Date constructor, e.g MM.DD.YYYY
+Where from date and to date must be date parseable by js [Date constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date), e.g MM.DD.YYYY
 
 ### example
 ```sh
