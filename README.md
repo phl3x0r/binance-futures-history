@@ -21,7 +21,7 @@ npm run build
 
 ## run
 ```sh
-npm start -- --o <output filenam> --from <from date> --to <to date>
+npm start -- --o <output filename> --from <from date> --to <to date>
 ```
 Where from date and to date must be date parseable by js Date constructor, e.g MM.DD.YYYY
 
