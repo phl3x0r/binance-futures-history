@@ -9,6 +9,11 @@ This project uses typescript, install with
 npm install -g typescript
 ```
 
+Install project dependencies
+```sh
+npm install
+```
+
 ## build
 ```sh
 npm run build
