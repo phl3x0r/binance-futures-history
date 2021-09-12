@@ -1,0 +1,32 @@
+{
+  "name": "binance-futures-history",
+  "version": "1.0.0",
+  "description": "get and consolidate binance futures history data",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phl3x0r/binance-futures-history.git"
+  },
+  "author": "Niklas Hegnelt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/phl3x0r/binance-futures-history/issues"
+  },
+  "homepage": "https://github.com/phl3x0r/binance-futures-history#readme",
+  "dependencies": {
+    "abort-controller": "^3.0.0",
+    "crypto-js": "^4.1.1",
+    "csv-writer": "^1.6.0",
+    "fetch": "^1.1.0",
+    "node-fetch": "^3.0.0",
+    "rxjs": "^7.3.0"
+  },
+  "devDependencies": {
+    "@types/crypto-js": "^4.0.2",
+    "@types/node": "^16.9.1"
+  }
+}
