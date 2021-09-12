@@ -162,7 +162,7 @@ const csvWriterExcel = csv.createObjectCsvWriter({
 });
 
 const consolidate = (entries: Income[]) =>
-  Object.entries(
+  Object.values(
     entries
       .sort((a, b) => a.time - b.time)
       .reduce((acc: { [key: string]: MappedIncome[] }, cur: Income) => {
@@ -190,7 +190,7 @@ const consolidate = (entries: Income[]) =>
         return acc;
       }, {})
   )
-    .map(([_key, entries]) => entries)
+    .map((entries) => entries)
     .reduce((a, b) => a.concat(b), [])
     .sort((a, b) => a.time - b.time);
 
