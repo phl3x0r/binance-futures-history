@@ -14,6 +14,8 @@ Install project dependencies
 npm install
 ```
 
+rename `src/config-example.ts` -> `src/config.ts` and update `apiKey` and `apiSecret` values
+
 ## build
 ```sh
 npm run build
