@@ -1,4 +1,4 @@
 node_modules
 dist
-src/config.json
+src/config.ts
 *.csv

@@ -1,12 +1,10 @@
 import hmac from "crypto-js/hmac-sha256.js";
-// import * as sha256 from "crypto-js/hmac-sha256";
-// import sha256 = require("crypto-js/hmac-sha256")
 import { Observable, of, throwError, timer } from "rxjs";
 import { catchError, filter, mergeMap, switchMap, tap } from "rxjs/operators";
 import fetch, { RequestInit, Request, Response } from "node-fetch";
 import AbortController from "abort-controller";
 import * as csv from "csv-writer";
-import * as config from "./config.json";
+import { config } from "./config.js";
 
 // endpoints
 const ENDPOINT = "https://fapi.binance.com";
@@ -39,23 +37,6 @@ const getUrl = (querystring: string) =>
     apiSecret
   )}`;
 const getHeaders = (apiKey: string) => ({ "X-MBX-APIKEY": apiKey });
-
-const remDupes = (list: IncomeResult) =>
-  list.filter(
-    (thing, index, self) =>
-      index ===
-      self.findIndex(
-        (t) =>
-          t.symbol === thing.symbol &&
-          t.incomeType === thing.incomeType &&
-          t.income === thing.income &&
-          t.asset === thing.asset &&
-          t.info === thing.info &&
-          t.time === thing.time &&
-          t.tranId === thing.tranId &&
-          t.tradeId === thing.tradeId
-      )
-  );
 
 const removeDupes = (cur: IncomeResult, acc: IncomeResult) =>
   cur.filter(

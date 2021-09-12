@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,7 +23,6 @@
     "abort-controller": "^3.0.0",
     "crypto-js": "^4.1.1",
     "csv-writer": "^1.6.0",
-    "fetch": "^1.1.0",
     "node-fetch": "^3.0.0",
     "rxjs": "^7.3.0"
   },
