@@ -190,7 +190,6 @@ const consolidate = (entries: Income[]) =>
         return acc;
       }, {})
   )
-    .map((entries) => entries)
     .reduce((a, b) => a.concat(b), [])
     .sort((a, b) => a.time - b.time);
 
