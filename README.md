@@ -35,5 +35,5 @@ Where from date and to date must be date parseable by js [Date constructor](http
 ### example
 
 ```sh
-npm start -- --o my_history --from 6.1.2021 --to 9.1.2021
+npm start -- --from 6.1.2021 --to 9.1.2021
 ```
