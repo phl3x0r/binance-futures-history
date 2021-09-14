@@ -60,7 +60,7 @@ export enum IncomeType {
 export interface ExcelLine {
   date: string;
   transfer: number;
-  relizedPnl: number;
+  realizedPnl: number;
   fundingFee: number;
   commission: number;
   commissionRebate: number;
@@ -86,7 +86,7 @@ export const csvHeaders = [
 export const csvHeadersExcel = [
   { id: "date", title: "date" },
   { id: "transfer", title: "transfer" },
-  { id: "relizedPnl", title: "relizedPnl" },
+  { id: "realizedPnl", title: "realizedPnl" },
   { id: "fundingFee", title: "fundingFee" },
   { id: "commission", title: "commission" },
   { id: "commissionRebate", title: "commissionRebate" },

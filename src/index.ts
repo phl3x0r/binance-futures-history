@@ -212,7 +212,7 @@ const mapToExcel = (entries: MappedIncome[]) =>
             date: new Date(cur.time).toLocaleDateString(),
             asset: cur.asset,
             transfer: cur.incomeType === IncomeType.TRANSFER ? cur.income : 0,
-            relizedPnl:
+            realizedPnl:
               cur.incomeType === IncomeType.REALIZED_PNL ? cur.income : 0,
             fundingFee:
               cur.incomeType === IncomeType.FUNDING_FEE ? cur.income : 0,
@@ -231,7 +231,7 @@ const mapToExcel = (entries: MappedIncome[]) =>
           last.date = new Date(cur.time).toLocaleDateString();
           last.transfer +=
             cur.incomeType === IncomeType.TRANSFER ? cur.income : 0;
-          last.relizedPnl +=
+          last.realizedPnl +=
             cur.incomeType === IncomeType.REALIZED_PNL ? cur.income : 0;
           last.fundingFee +=
             cur.incomeType === IncomeType.FUNDING_FEE ? cur.income : 0;
