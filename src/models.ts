@@ -54,6 +54,7 @@ export enum IncomeType {
   FUNDING_FEE = "FUNDING_FEE",
   COMMISSION = "COMMISSION",
   INSURANCE_CLEAR = "INSURANCE_CLEAR",
+  COMMISSION_REBATE = "COMMISSION_REBATE",
 }
 
 export interface ExcelLine {
@@ -62,6 +63,7 @@ export interface ExcelLine {
   relizedPnl: number;
   fundingFee: number;
   commission: number;
+  commissionRebate: number;
   insuranceClear: number;
   welcomeBonus: number;
   total: number;
@@ -87,6 +89,7 @@ export const csvHeadersExcel = [
   { id: "relizedPnl", title: "relizedPnl" },
   { id: "fundingFee", title: "fundingFee" },
   { id: "commission", title: "commission" },
+  { id: "commissionRebate", title: "commissionRebate" },
   { id: "insuranceClear", title: "insuranceClear" },
   { id: "welcomeBonus", title: "welcomeBonus" },
   { id: "total", title: "total" },

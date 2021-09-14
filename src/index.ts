@@ -218,6 +218,8 @@ const mapToExcel = (entries: MappedIncome[]) =>
               cur.incomeType === IncomeType.FUNDING_FEE ? cur.income : 0,
             commission:
               cur.incomeType === IncomeType.COMMISSION ? cur.income : 0,
+            commissionRebate:
+              cur.incomeType === IncomeType.COMMISSION_REBATE ? cur.income : 0,
             insuranceClear:
               cur.incomeType === IncomeType.INSURANCE_CLEAR ? cur.income : 0,
             welcomeBonus:
@@ -235,8 +237,10 @@ const mapToExcel = (entries: MappedIncome[]) =>
             cur.incomeType === IncomeType.FUNDING_FEE ? cur.income : 0;
           last.commission +=
             cur.incomeType === IncomeType.COMMISSION ? cur.income : 0;
-          last.insuranceClear +=
-            cur.incomeType === IncomeType.INSURANCE_CLEAR ? cur.income : 0;
+          (last.commissionRebate +=
+            cur.incomeType === IncomeType.COMMISSION_REBATE ? cur.income : 0),
+            (last.insuranceClear +=
+              cur.incomeType === IncomeType.INSURANCE_CLEAR ? cur.income : 0);
           last.welcomeBonus +=
             cur.incomeType === IncomeType.WELCOME_BONUS ? cur.income : 0;
           last.total += cur.income;
