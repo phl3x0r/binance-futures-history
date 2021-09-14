@@ -5,6 +5,17 @@ import fetch, { RequestInit, Request, Response } from "node-fetch";
 import AbortController from "abort-controller";
 import * as csv from "csv-writer";
 import { config } from "./config.js";
+import {
+  csvHeaders,
+  csvHeadersExcel,
+  ExcelLine,
+  Income,
+  IncomeResult,
+  IncomeType,
+  MappedIncome,
+  RecurseParams,
+  ReqParams,
+} from "./models.js";
 
 // endpoints
 const ENDPOINT = "https://fapi.binance.com";
@@ -13,17 +24,16 @@ const args = process.argv.slice(2);
 const getParam = (p: string) =>
   args[args.findIndex((a) => a.indexOf(p) > -1) + 1];
 
-const filename = getParam("o");
 const fromDate = new Date(getParam("from")).getTime();
 const toDate = new Date(getParam("to")).getTime();
 
-if (args.length !== 6 || !filename) {
-  console.log("use: --o <output filename> --from <date from> --to <date to>");
+if (args.length !== 4) {
+  console.log("use: --from <date from> --to <date to>");
   process.exit(9);
 }
 
-const apiKey = config.apiKey;
-const apiSecret = config.apiSecret;
+// const apiKey = config.apiKey;
+// const apiSecret = config.apiSecret;
 
 // util functions
 const getTime = () => new Date().getTime();
@@ -31,10 +41,10 @@ const getQuerystring = (from: number, to: number) =>
   `timestamp=${getTime()}&limit=1000&startTime=${from}&endTime=${to}`;
 const getSignature = (querystring, secret: string) =>
   hmac(querystring, secret).toString();
-const getUrl = (querystring: string) =>
+const getUrl = (querystring: string, secret: string) =>
   `${ENDPOINT}/fapi/v1/income?${querystring}&signature=${getSignature(
     querystring,
-    apiSecret
+    secret
   )}`;
 const getHeaders = (apiKey: string) => ({ "X-MBX-APIKEY": apiKey });
 
@@ -55,10 +65,10 @@ const removeDupes = (cur: IncomeResult, acc: IncomeResult) =>
   );
 
 // the history request
-const historyRequest$ = (from: number, to: number, count: number = 0) =>
-  fromFetch(getUrl(getQuerystring(from, to)), {
+const historyRequest$ = ({ account, from, to, count = 0 }: ReqParams) =>
+  fromFetch(getUrl(getQuerystring(from, to), account.apiSecret), {
     method: "GET",
-    headers: getHeaders(apiKey),
+    headers: getHeaders(account.apiKey),
   }).pipe(
     switchMap((response) => {
       if (response.ok) {
@@ -72,7 +82,7 @@ const historyRequest$ = (from: number, to: number, count: number = 0) =>
     tap((res) => {
       if (res && res.length) {
         console.log(
-          `#${count}: ${new Date(res[0].time)} to: ${new Date(
+          `${account.name} (#${count}): ${new Date(res[0].time)} to: ${new Date(
             res[res.length - 1].time
           )}`
         );
@@ -85,81 +95,70 @@ const historyRequest$ = (from: number, to: number, count: number = 0) =>
     })
   );
 
-const recurse = (
-  from: number,
-  to: number,
-  acc: IncomeResult,
-  last: IncomeResult,
-  count: number
-): Observable<IncomeResult> =>
-  historyRequest$(from, to, count).pipe(
+const recurse = ({
+  accounts,
+  from,
+  to,
+  acc,
+  last,
+  count,
+  aggregatedResult,
+}: RecurseParams): Observable<{ [key: string]: IncomeResult }> => {
+  return historyRequest$({ account: accounts[0], from, to, count }).pipe(
     filter((result) => result instanceof Array),
     mergeMap((result: IncomeResult) => {
       if (result.length === 1000 && !!result[result.length - 1]) {
         return timer(500).pipe(
           switchMap(() =>
-            recurse(
-              result[result.length - 1].time,
+            recurse({
+              accounts,
+              from: result[result.length - 1].time,
               to,
-              [...acc, ...removeDupes(result, last)],
-              result,
-              count + 1
-            )
+              acc: [...acc, ...removeDupes(result, last)],
+              last: result,
+              count: count + 1,
+              aggregatedResult,
+            })
           )
         );
       }
       if (result.length === 0) {
         console.log(`retrying from: ${new Date(from - 100).toISOString()}`);
         return timer(2000).pipe(
-          switchMap(() => recurse(from - 100, to, acc, last, count + 1))
+          switchMap(() =>
+            recurse({
+              accounts,
+              from: from - 100,
+              to,
+              acc,
+              last,
+              count: count + 1,
+              aggregatedResult,
+            })
+          )
         );
       }
-      return of([...acc, ...removeDupes(result, last)]);
+      return of([...acc, ...removeDupes(result, last)]).pipe(
+        switchMap((res) => {
+          const account = accounts.shift();
+          if (accounts.length > 0) {
+            return recurse({
+              accounts,
+              from: fromDate,
+              to,
+              acc: [],
+              last: [],
+              count: 0,
+              aggregatedResult: { ...aggregatedResult, [account.name]: res },
+            });
+          } else {
+            return of({ ...aggregatedResult, [account.name]: res });
+          }
+        })
+      );
     })
   );
-
-const csvWriter = csv.createObjectCsvWriter({
-  path: `${filename}_raw.csv`,
-  header: [
-    { id: "symbol", title: "symbol" },
-    { id: "incomeType", title: "incomeType" },
-    { id: "income", title: "income" },
-    { id: "asset", title: "asset" },
-    { id: "info", title: "info" },
-    { id: "time", title: "time" },
-    { id: "tranId", title: "tranId" },
-    { id: "tradeId", title: "tradeId" },
-  ],
-});
-
-const csvWriterCons = csv.createObjectCsvWriter({
-  path: `${filename}_daily.csv`,
-  header: [
-    { id: "symbol", title: "symbol" },
-    { id: "incomeType", title: "incomeType" },
-    { id: "income", title: "income" },
-    { id: "asset", title: "asset" },
-    { id: "info", title: "info" },
-    { id: "time", title: "time" },
-    { id: "tranId", title: "tranId" },
-    { id: "tradeId", title: "tradeId" },
-  ],
-});
-
-const csvWriterExcel = csv.createObjectCsvWriter({
-  path: `${filename}_excel.csv`,
-  header: [
-    { id: "date", title: "date" },
-    { id: "transfer", title: "transfer" },
-    { id: "relizedPnl", title: "relizedPnl" },
-    { id: "fundingFee", title: "fundingFee" },
-    { id: "commission", title: "commission" },
-    { id: "insuranceClear", title: "insuranceClear" },
-    { id: "welcomeBonus", title: "welcomeBonus" },
-    { id: "total", title: "total" },
-    { id: "asset", title: "asset" },
-  ],
-});
+};
 
 const consolidate = (entries: Income[]) =>
   Object.values(
@@ -249,71 +248,47 @@ const mapToExcel = (entries: MappedIncome[]) =>
     .reduce((a, b) => a.concat(b), [])
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-recurse(fromDate, toDate, [], [], 0).subscribe((res) => {
-  console.log("final: ");
-  console.log(`first: ${new Date(res[0].time)}`);
-  console.log(`last: ${new Date(res[res.length - 1].time)}`);
-  csvWriter
-    .writeRecords(res)
-    .then(() => console.log(`Wrote Raw: ${res.length} rows`));
-  const consolidated = consolidate(res);
-  csvWriterCons
-    .writeRecords(consolidated)
-    .then(() => console.log(`Wrote Consolidated: ${consolidated.length} rows`));
-  const excel = mapToExcel(consolidated);
-  csvWriterExcel
-    .writeRecords(excel)
-    .then(() => console.log(`Wrote Excel: ${excel.length} rows`));
+recurse({
+  accounts: config.accounts,
+  from: fromDate,
+  to: toDate,
+  acc: [],
+  last: [],
+  count: 0,
+  aggregatedResult: {},
+}).subscribe((res) => {
+  Object.entries(res).forEach(([key, entry]) => {
+    const [fds, tds] = [fromDate, toDate].map((s) =>
+      getDateString(new Date(s))
+    );
+
+    const path = `${key}_${fds}_${tds}`;
+    const rawPath = createPath(path, "raw");
+    cssWriterFactory(rawPath, csvHeaders)
+      .writeRecords(entry)
+      .then(() => console.log(`Wrote ${rawPath}: ${entry.length} rows`));
+
+    const consolidated = consolidate(entry);
+    const consPath = createPath(path, "cons");
+    cssWriterFactory(consPath, csvHeaders)
+      .writeRecords(consolidated)
+      .then(() =>
+        console.log(`Wrote ${consPath}: ${consolidated.length} rows`)
+      );
+
+    const excel = mapToExcel(consolidated);
+    const excPath = createPath(path, "excel");
+    cssWriterFactory(excPath, csvHeadersExcel)
+      .writeRecords(excel)
+      .then(() => console.log(`Wrote ${excPath}: ${excel.length} rows`));
+  });
 });
 
-interface Income {
-  symbol: string;
-  incomeType: string;
-  income: string;
-  asset: string;
-  info: string;
-  time: number;
-  tranId: string;
-  tradeId: string;
-}
-
-interface MappedIncome {
-  symbol: string;
-  incomeType: string;
-  income: number;
-  asset: string;
-  info: string;
-  time: number;
-  tranId: string;
-  tradeId: string;
-}
-
-enum IncomeType {
-  TRANSFER = "TRANSFER",
-  WELCOME_BONUS = "WELCOME_BONUS",
-  REALIZED_PNL = "REALIZED_PNL",
-  FUNDING_FEE = "FUNDING_FEE",
-  COMMISSION = "COMMISSION",
-  INSURANCE_CLEAR = "INSURANCE_CLEAR",
-}
-
-interface ExcelLine {
-  date: string;
-  transfer: number;
-  relizedPnl: number;
-  fundingFee: number;
-  commission: number;
-  insuranceClear: number;
-  welcomeBonus: number;
-  total: number;
-  asset: string;
-}
-
-type IncomeResult = Array<Income>;
-
-interface Config {
-  apiKey: string;
-  apiSecret: string;
+function getDateString(td: Date) {
+  return `${td.getFullYear()}${td.getMonth().toString().padStart(2, "0")}${td
+    .getDate()
+    .toString()
+    .padStart(2, "0")}`;
 }
 
 function fromFetch(
@@ -363,4 +338,17 @@ function fromFetch(
       }
     };
   });
+}
+function cssWriterFactory(
+  path: string,
+  header: { id: string; title: string }[]
+) {
+  return csv.createObjectCsvWriter({
+    path,
+    header,
+  });
+}
+
+function createPath(path, suffix) {
+  return `${path}_${suffix}.csv`;
 }
