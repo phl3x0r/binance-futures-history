@@ -122,13 +122,20 @@ const recurse = ({
           )
         );
       }
-      if (result.length === 0) {
-        console.log(`retrying from: ${new Date(from - 100).toISOString()}`);
+      if (result.length === 0 && last.length !== 0) {
+        const msToSubtract = 60000;
+        console.log(
+          `retrying from: ${new Date(
+            from - msToSubtract
+          ).toISOString()}\tlast: ${new Date(
+            last[last.length - 1].time
+          ).toISOString()}`
+        );
         return timer(2000).pipe(
           switchMap(() =>
             recurse({
               accounts,
-              from: from - 100,
+              from: from - msToSubtract,
               to,
               acc,
               last,
@@ -220,6 +227,8 @@ const mapToExcel = (entries: MappedIncome[]) =>
               cur.incomeType === IncomeType.COMMISSION ? cur.income : 0,
             commissionRebate:
               cur.incomeType === IncomeType.COMMISSION_REBATE ? cur.income : 0,
+            referralKickback:
+              cur.incomeType === IncomeType.REFERRAL_KICKBACK ? cur.income : 0,
             insuranceClear:
               cur.incomeType === IncomeType.INSURANCE_CLEAR ? cur.income : 0,
             welcomeBonus:
@@ -237,10 +246,12 @@ const mapToExcel = (entries: MappedIncome[]) =>
             cur.incomeType === IncomeType.FUNDING_FEE ? cur.income : 0;
           last.commission +=
             cur.incomeType === IncomeType.COMMISSION ? cur.income : 0;
-          (last.commissionRebate +=
-            cur.incomeType === IncomeType.COMMISSION_REBATE ? cur.income : 0),
-            (last.insuranceClear +=
-              cur.incomeType === IncomeType.INSURANCE_CLEAR ? cur.income : 0);
+          last.commissionRebate +=
+            cur.incomeType === IncomeType.COMMISSION_REBATE ? cur.income : 0;
+          last.referralKickback +=
+            cur.incomeType === IncomeType.REFERRAL_KICKBACK ? cur.income : 0;
+          last.insuranceClear +=
+            cur.incomeType === IncomeType.INSURANCE_CLEAR ? cur.income : 0;
           last.welcomeBonus +=
             cur.incomeType === IncomeType.WELCOME_BONUS ? cur.income : 0;
           last.total += cur.income;
