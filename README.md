@@ -5,6 +5,7 @@ tools to get and consolidate history data from binance
 ## prerequisites
 
 This project uses [node.js](https://nodejs.org/) and typescript
+
 Install typescript:
 
 ```sh
